@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mapa Interativo - Árvores Mapeadas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoiam9hb3BlZHJvY3AiLCJhIjoiY204c3J2ajM2MDNnMjJsb2UzZzRiMmliZCJ9.5ErYD9_RR-P_PSIEm28x4w';
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/satellite-v9',
+      center: [-50.7315, -23.2635], // Centralizado na área dos pontos
+      zoom: 13
+    });
+
+    map.on('load', () => {
+      map.addSource('trechos', {
+        'type': 'geojson',
+        'data': './trechos.json'
+      });
+
+      map.addLayer({
+        'id': 'trechos-pontos',
+        'type': 'circle',
+        'source': 'trechos',
+        'paint': {
+          'circle-radius': 6,
+          'circle-color': [
+            'match',
+            ['get', 'category'],
+            'ADWÁGUAMINERAL', '#007cbf',              // Azul
+            'ADMFAZENDA', '#00ff00',                  // Verde
+            'ESTACIONAMENTO', '#ffff00',              // Amarelo
+            'PRIVILEGE', '#ff00ff',                   // Magenta
+            'VIADE ACESSO PORTARIAVADM', '#ff8000',   // Laranja
+            'VIADE ACESSO PRIVILEGE/PORTARIA', '#800080', // Roxo
+            'VIADE ACESSO TREVO/PORTARIA', '#ff0000', // Vermelho
+            '#cccccc'                                 // Cinza (padrão)
+          ]
+        }
+      });
+
+      map.on('click', 'trechos-pontos', (e) => {
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const description = e.features[0].properties.description;
+        const id = e.features[0].properties.id;
+        const category = e.features[0].properties.category;
+
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`<h3>ID: ${id}</h3><p>Categoria: ${category}</p><p>${description}</p>`)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', 'trechos-pontos', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'trechos-pontos', () => {
+        map.getCanvas().style.cursor = '';
+      });
+    });
+  </script>
+</body>
+</html>
