@@ -37,7 +37,7 @@
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732997, -23.268991]}, "properties": {"id": 34, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732982, -23.269360]}, "properties": {"id": 35, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732936, -23.269182]}, "properties": {"id": 36, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
-    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [50.732911, -23.269293]}, "properties": {"id": 37, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732911, -23.269293]}, "properties": {"id": 37, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732870, -23.269048]}, "properties": {"id": 38, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732845, -23.269299]}, "properties": {"id": 39, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732928, -23.269164]}, "properties": {"id": 40, "category": "ADWÁGUAMINERAL", "description": "Trecho 22-46"}},
@@ -73,5 +73,6 @@
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732656, -23.266017]}, "properties": {"id": 70, "category": "ESTACIONAMENTO", "description": "Trecho 67-72"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.732984, -23.266144]}, "properties": {"id": 71, "category": "ESTACIONAMENTO", "description": "Trecho 67-72"}},
     {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-50.733156, -23.266325]}, "properties": {"id": 72, "category": "ESTACIONAMENTO", "description": "Trecho 67-72"}}
+    
   ]
 }

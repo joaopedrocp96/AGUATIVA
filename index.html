@@ -19,15 +19,30 @@
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/mapbox/satellite-v9',
-      center: [-50.7315, -23.2635], // Centralizado na área dos pontos
+      center: [-50.7315, -23.2635],
       zoom: 13
     });
 
     map.on('load', () => {
       map.addSource('trechos', {
         'type': 'geojson',
-        'data': './trechos.json'
+        'data': 'trechos.json'
       });
+
+      map.addSource('limite', {
+        'type': 'geojson',
+        'data': 'limite_propriedade.geojson'
+      });
+
+      // Adicionar log para depuração
+      fetch('limite_propriedade.geojson')
+        .then(response => response.json())
+        .then(data => {
+          console.log('Dados do limite:', data);
+        })
+        .catch(error => {
+          console.error('Erro ao carregar limite_propriedade.geojson:', error);
+        });
 
       map.addLayer({
         'id': 'trechos-pontos',
@@ -38,15 +53,36 @@
           'circle-color': [
             'match',
             ['get', 'category'],
-            'ADWÁGUAMINERAL', '#007cbf',              // Azul
-            'ADMFAZENDA', '#00ff00',                  // Verde
-            'ESTACIONAMENTO', '#ffff00',              // Amarelo
-            'PRIVILEGE', '#ff00ff',                   // Magenta
-            'VIADE ACESSO PORTARIAVADM', '#ff8000',   // Laranja
-            'VIADE ACESSO PRIVILEGE/PORTARIA', '#800080', // Roxo
-            'VIADE ACESSO TREVO/PORTARIA', '#ff0000', // Vermelho
-            '#cccccc'                                 // Cinza (padrão)
+            'ADWÁGUAMINERAL', '#007cbf',
+            'ADMFAZENDA', '#00ff00',
+            'ESTACIONAMENTO', '#ffff00',
+            'PRIVILEGE', '#ff00ff',
+            'VIADE ACESSO PORTARIAVADM', '#ff8000',
+            'VIADE ACESSO PRIVILEGE/PORTARIA', '#800080',
+            'VIADE ACESSO TREVO/PORTARIA', '#ff0000',
+            '#cccccc'
           ]
+        }
+      });
+
+      map.addLayer({
+        'id': 'limite-propriedade',
+        'type': 'fill',
+        'source': 'limite',
+        'paint': {
+          'fill-color': '#000000',
+          'fill-opacity': 0.2,
+          'fill-outline-color': '#000000'
+        }
+      });
+
+      map.addLayer({
+        'id': 'limite-propriedade-borda',
+        'type': 'line',
+        'source': 'limite',
+        'paint': {
+          'line-color': '#ff0000',
+          'line-width': 2
         }
       });
 
@@ -62,10 +98,28 @@
           .addTo(map);
       });
 
+      map.on('click', 'limite-propriedade', (e) => {
+        const coordinates = e.features[0].geometry.coordinates[0][0];
+        const nom_tema = e.features[0].properties.nom_tema;
+        const num_area = e.features[0].properties.num_area;
+
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`<h3>${nom_tema}</h3><p>Área: ${num_area} ha</p>`)
+          .addTo(map);
+      });
+
       map.on('mouseenter', 'trechos-pontos', () => {
         map.getCanvas().style.cursor = 'pointer';
       });
       map.on('mouseleave', 'trechos-pontos', () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      map.on('mouseenter', 'limite-propriedade', () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'limite-propriedade', () => {
         map.getCanvas().style.cursor = '';
       });
     });
