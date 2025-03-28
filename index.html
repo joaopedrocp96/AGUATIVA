@@ -31,7 +31,7 @@
     }
     #map-container {
       position: relative;
-      height: calc(100vh - 80px); /* Ajusta a altura do mapa para subtrair o header */
+      height: calc(100vh - 80px);
     }
     #map {
       position: absolute;
@@ -61,11 +61,47 @@
       margin-right: 5px;
       border: 1px solid #ccc;
     }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+    #controls label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 12px;
+    }
+    #controls select, #controls input {
+      margin-bottom: 10px;
+      font-size: 12px;
+    }
+    .mapboxgl-popup-content {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    .mapboxgl-popup-content h3 {
+      margin: 0 0 5px;
+      font-size: 16px;
+      color: #2c3e50;
+    }
+    .mapboxgl-popup-content p {
+      margin: 0;
+      font-size: 12px;
+      color: #555;
+    }
   </style>
 </head>
 <body>
   <div id="header">
-    <h1>Mapa Interativo: Árvores Mapeadas - Cornélio Procópio, PR</h1>
+    <h1>Mapa Interativo: Árvores Mapeadas para Supressão - Cornélio Procópio, PR</h1>
     <p>Visualize as árvores mapeadas e o limite da propriedade. Clique nos pontos para mais detalhes.</p>
   </div>
   <div id="map-container">
@@ -74,7 +110,7 @@
       <h4>Legenda</h4>
       <div class="legend-item">
         <div class="legend-color" style="background-color: #007cbf;"></div>
-        <span>ADM/ÁGUA MINERAL</span>
+        <span>ADM/ÁGUAMINERAL</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background-color: #00ff00;"></div>
@@ -105,6 +141,27 @@
         <span>Limite da Propriedade</span>
       </div>
     </div>
+    <div id="controls">
+      <label>
+        Filtrar por Categoria:
+        <select id="category-filter">
+          <option value="all">Todas</option>
+          <option value="ADmÁGUAMINERAL">ADmÁGUAMINERAL</option>
+          <option value="ADM/FAZENDA">ADM/FAZENDA</option>
+          <option value="ESTACIONAMENTO">ESTACIONAMENTO</option>
+          <option value="PRIVILEGE">PRIVILEGE</option>
+          <option value="VIA DE ACESSO PORTARIAVADM">VIA DE ACESSO PORTARIAVADM</option>
+          <option value="VIA DE ACESSO PRIVILEGE/PORTARIA">VIA DE ACESSO PRIVILEGE/PORTARIA</option>
+          <option value="VIA DE ACESSO TREVO/PORTARIA">VIA DE ACESSO TREVO/PORTARIA</option>
+        </select>
+      </label>
+      <label>
+        <input type="checkbox" id="toggle-points" checked> Mostrar Pontos
+      </label>
+      <label>
+        <input type="checkbox" id="toggle-boundary" checked> Mostrar Limite da Propriedade
+      </label>
+    </div>
   </div>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1Ijoiam9hb3BlZHJvY3AiLCJhIjoiY204c3J2ajM2MDNnMjJsb2UzZzRiMmliZCJ9.5ErYD9_RR-P_PSIEm28x4w';
@@ -116,9 +173,10 @@
       zoom: 13
     });
 
-    // Adicionar controles de navegação (zoom e tela cheia)
+    // Adicionar controles de navegação (zoom, rotação, tela cheia e escala)
     map.addControl(new mapboxgl.NavigationControl());
     map.addControl(new mapboxgl.FullscreenControl());
+    map.addControl(new mapboxgl.ScaleControl());
 
     map.on('load', () => {
       map.addSource('trechos', {
@@ -140,13 +198,13 @@
           'circle-color': [
             'match',
             ['get', 'category'],
-            'ADWÁGUAMINERAL', '#007cbf',
-            'ADMFAZENDA', '#00ff00',
+            'ADM/ÁGUAMINERAL', '#007cbf',
+            'ADM/FAZENDA', '#00ff00',
             'ESTACIONAMENTO', '#ffff00',
             'PRIVILEGE', '#ff00ff',
-            'VIADE ACESSO PORTARIAVADM', '#ff8000',
-            'VIADE ACESSO PRIVILEGE/PORTARIA', '#800080',
-            'VIADE ACESSO TREVO/PORTARIA', '#ff0000',
+            'VIA DE ACESSO PORTARIA/ADM', '#ff8000',
+            'VIA DE ACESSO PRIVILEGE/PORTARIA', '#800080',
+            'VIA DE ACESSO TREVO/PORTARIA', '#ff0000',
             '#cccccc'
           ],
           'circle-stroke-width': 1,
@@ -173,6 +231,36 @@
           'line-color': '#ff0000',
           'line-width': 2
         }
+      });
+
+      // Adicionar marcador inicial
+      new mapboxgl.Marker()
+        .setLngLat([-50.7315, -23.2635])
+        .setPopup(new mapboxgl.Popup().setHTML('<h3>Bem-vindo!</h3><p>Explore as árvores mapeadas e o limite da propriedade.</p>'))
+        .addTo(map)
+        .togglePopup();
+
+      // Filtro por categoria
+      document.getElementById('category-filter').addEventListener('change', (e) => {
+        const category = e.target.value;
+        if (category === 'all') {
+          map.setFilter('trechos-pontos', null);
+        } else {
+          map.setFilter('trechos-pontos', ['==', ['get', 'category'], category]);
+        }
+      });
+
+      // Alternar visibilidade dos pontos
+      document.getElementById('toggle-points').addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('trechos-pontos', 'visibility', visibility);
+      });
+
+      // Alternar visibilidade do limite da propriedade
+      document.getElementById('toggle-boundary').addEventListener('change', (e) => {
+        const visibility = e.target.checked ? 'visible' : 'none';
+        map.setLayoutProperty('limite-propriedade', 'visibility', visibility);
+        map.setLayoutProperty('limite-propriedade-borda', 'visibility', visibility);
       });
 
       map.on('click', 'trechos-pontos', (e) => {
