@@ -101,7 +101,7 @@
 </head>
 <body>
   <div id="header">
-    <h1>Mapa Interativo: Árvores Mapeadas para Supressão - Cornélio Procópio, PR</h1>
+    <h1>Mapa Interativo: Árvores Mapeadas - Cornélio Procópio, PR</h1>
     <p>Visualize as árvores mapeadas e o limite da propriedade. Clique nos pontos para mais detalhes.</p>
   </div>
   <div id="map-container">
@@ -110,7 +110,7 @@
       <h4>Legenda</h4>
       <div class="legend-item">
         <div class="legend-color" style="background-color: #007cbf;"></div>
-        <span>ADM/ÁGUAMINERAL</span>
+        <span>ADM/ÁGUA MINERAL</span>
       </div>
       <div class="legend-item">
         <div class="legend-color" style="background-color: #00ff00;"></div>
@@ -146,11 +146,11 @@
         Filtrar por Categoria:
         <select id="category-filter">
           <option value="all">Todas</option>
-          <option value="ADmÁGUAMINERAL">ADmÁGUAMINERAL</option>
+          <option value="ADM/ÁGUA MINERAL">ADM/ÁGUA MINERAL</option>
           <option value="ADM/FAZENDA">ADM/FAZENDA</option>
           <option value="ESTACIONAMENTO">ESTACIONAMENTO</option>
           <option value="PRIVILEGE">PRIVILEGE</option>
-          <option value="VIA DE ACESSO PORTARIAVADM">VIA DE ACESSO PORTARIAVADM</option>
+          <option value="VIA DE ACESSO PORTARIA/ADM">VIA DE ACESSO PORTARIA/ADM</option>
           <option value="VIA DE ACESSO PRIVILEGE/PORTARIA">VIA DE ACESSO PRIVILEGE/PORTARIA</option>
           <option value="VIA DE ACESSO TREVO/PORTARIA">VIA DE ACESSO TREVO/PORTARIA</option>
         </select>
@@ -173,7 +173,6 @@
       zoom: 13
     });
 
-    // Adicionar controles de navegação (zoom, rotação, tela cheia e escala)
     map.addControl(new mapboxgl.NavigationControl());
     map.addControl(new mapboxgl.FullscreenControl());
     map.addControl(new mapboxgl.ScaleControl());
@@ -189,6 +188,17 @@
         'data': 'limite_propriedade.geojson'
       });
 
+      // Log para depuração: exibir os valores de category
+      fetch('trechos.json')
+        .then(response => response.json())
+        .then(data => {
+          const categories = data.features.map(feature => feature.properties.category);
+          console.log('Valores de category no trechos.json:', [...new Set(categories)]);
+        })
+        .catch(error => {
+          console.error('Erro ao carregar trechos.json:', error);
+        });
+
       map.addLayer({
         'id': 'trechos-pontos',
         'type': 'circle',
@@ -196,15 +206,14 @@
         'paint': {
           'circle-radius': 6,
           'circle-color': [
-            'match',
-            ['get', 'category'],
-            'ADM/ÁGUAMINERAL', '#007cbf',
-            'ADM/FAZENDA', '#00ff00',
-            'ESTACIONAMENTO', '#ffff00',
-            'PRIVILEGE', '#ff00ff',
-            'VIA DE ACESSO PORTARIA/ADM', '#ff8000',
-            'VIA DE ACESSO PRIVILEGE/PORTARIA', '#800080',
-            'VIA DE ACESSO TREVO/PORTARIA', '#ff0000',
+            'case',
+            ['==', ['get', 'category'], 'ADM/ÁGUA MINERAL'], '#007cbf',
+            ['==', ['get', 'category'], 'ADM/FAZENDA'], '#00ff00',
+            ['==', ['get', 'category'], 'ESTACIONAMENTO'], '#ffff00',
+            ['==', ['get', 'category'], 'PRIVILEGE'], '#ff00ff',
+            ['==', ['get', 'category'], 'VIA DE ACESSO PORTARIA/ADM'], '#ff8000',
+            ['==', ['get', 'category'], 'VIA DE ACESSO PRIVILEGE/PORTARIA'], '#800080',
+            ['==', ['get', 'category'], 'VIA DE ACESSO TREVO/PORTARIA'], '#ff0000',
             '#cccccc'
           ],
           'circle-stroke-width': 1,
@@ -233,14 +242,12 @@
         }
       });
 
-      // Adicionar marcador inicial
       new mapboxgl.Marker()
         .setLngLat([-50.7315, -23.2635])
         .setPopup(new mapboxgl.Popup().setHTML('<h3>Bem-vindo!</h3><p>Explore as árvores mapeadas e o limite da propriedade.</p>'))
         .addTo(map)
         .togglePopup();
 
-      // Filtro por categoria
       document.getElementById('category-filter').addEventListener('change', (e) => {
         const category = e.target.value;
         if (category === 'all') {
@@ -250,13 +257,11 @@
         }
       });
 
-      // Alternar visibilidade dos pontos
       document.getElementById('toggle-points').addEventListener('change', (e) => {
         const visibility = e.target.checked ? 'visible' : 'none';
         map.setLayoutProperty('trechos-pontos', 'visibility', visibility);
       });
 
-      // Alternar visibilidade do limite da propriedade
       document.getElementById('toggle-boundary').addEventListener('change', (e) => {
         const visibility = e.target.checked ? 'visible' : 'none';
         map.setLayoutProperty('limite-propriedade', 'visibility', visibility);
