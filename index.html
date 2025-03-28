@@ -7,12 +7,105 @@
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
   <style>
-    body { margin: 0; padding: 0; }
-    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+    }
+    #header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    #header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    #header p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    #map-container {
+      position: relative;
+      height: calc(100vh - 80px); /* Ajusta a altura do mapa para subtrair o header */
+    }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+    #legend {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      font-size: 12px;
+      z-index: 1;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
-  <div id="map"></div>
+  <div id="header">
+    <h1>Mapa Interativo: Árvores Mapeadas - Cornélio Procópio, PR</h1>
+    <p>Visualize as árvores mapeadas e o limite da propriedade. Clique nos pontos para mais detalhes.</p>
+  </div>
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="legend">
+      <h4>Legenda</h4>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #007cbf;"></div>
+        <span>ADM/ÁGUA MINERAL</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #00ff00;"></div>
+        <span>ADM/FAZENDA</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ffff00;"></div>
+        <span>ESTACIONAMENTO</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ff00ff;"></div>
+        <span>PRIVILEGE</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ff8000;"></div>
+        <span>VIA DE ACESSO PORTARIA/ADM</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #800080;"></div>
+        <span>VIA DE ACESSO PRIVILEGE/PORTARIA</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ff0000;"></div>
+        <span>VIA DE ACESSO TREVO/PORTARIA</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #000000; opacity: 0.2; border: 1px solid #ff0000;"></div>
+        <span>Limite da Propriedade</span>
+      </div>
+    </div>
+  </div>
   <script>
     mapboxgl.accessToken = 'pk.eyJ1Ijoiam9hb3BlZHJvY3AiLCJhIjoiY204c3J2ajM2MDNnMjJsb2UzZzRiMmliZCJ9.5ErYD9_RR-P_PSIEm28x4w';
 
@@ -22,6 +115,10 @@
       center: [-50.7315, -23.2635],
       zoom: 13
     });
+
+    // Adicionar controles de navegação (zoom e tela cheia)
+    map.addControl(new mapboxgl.NavigationControl());
+    map.addControl(new mapboxgl.FullscreenControl());
 
     map.on('load', () => {
       map.addSource('trechos', {
@@ -33,16 +130,6 @@
         'type': 'geojson',
         'data': 'limite_propriedade.geojson'
       });
-
-      // Adicionar log para depuração
-      fetch('limite_propriedade.geojson')
-        .then(response => response.json())
-        .then(data => {
-          console.log('Dados do limite:', data);
-        })
-        .catch(error => {
-          console.error('Erro ao carregar limite_propriedade.geojson:', error);
-        });
 
       map.addLayer({
         'id': 'trechos-pontos',
@@ -61,7 +148,9 @@
             'VIADE ACESSO PRIVILEGE/PORTARIA', '#800080',
             'VIADE ACESSO TREVO/PORTARIA', '#ff0000',
             '#cccccc'
-          ]
+          ],
+          'circle-stroke-width': 1,
+          'circle-stroke-color': '#000000'
         }
       });
 
@@ -72,7 +161,7 @@
         'paint': {
           'fill-color': '#000000',
           'fill-opacity': 0.2,
-          'fill-outline-color': '#000000'
+          'fill-outline-color': '#ff0000'
         }
       });
 
