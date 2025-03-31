@@ -63,7 +63,7 @@
     }
     #controls {
       position: absolute;
-      top: 10px;
+      top: 50px; /* Ajustado para não sobrepor o botão toggle-controls */
       left: 10px;
       background-color: rgba(255, 255, 255, 0.9);
       padding: 10px;
@@ -90,6 +90,21 @@
       border-radius: 3px;
     }
     #controls button:hover {
+      background-color: #34495e;
+    }
+    #toggle-controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 5px;
+      cursor: pointer;
+      background-color: #2c3e50;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      z-index: 2;
+    }
+    #toggle-controls:hover {
       background-color: #34495e;
     }
     .mapboxgl-popup-content {
@@ -122,11 +137,12 @@
 </head>
 <body>
   <div id="header">
-    <h1>Mapa Interativo Aguativa: Árvores Mapeadas - Cornélio Procópio, PR</h1>
+    <h1>Mapa Interativo Aguativa: Árvores para Supressão Mapeadas - Cornélio Procópio, PR</h1>
     <p>Visualize as árvores mapeadas e o limite da propriedade. Clique nos pontos para mais detalhes.</p>
   </div>
   <div id="map-container">
     <div id="map"></div>
+    <button id="toggle-controls">Minimizar Filtros e Legenda</button>
     <div id="legend">
       <h4>Legenda</h4>
       <div class="legend-item">
@@ -165,7 +181,6 @@
     <div id="controls">
       <button id="center-map">Centralizar Mapa</button>
       <button id="export-map">Exportar Mapa como Imagem</button>
-      <button id="toggle-controls">Minimizar Filtros e Legenda</button>
       <label>
         Estilo do Mapa:
         <select id="map-style">
@@ -302,12 +317,22 @@
       document.getElementById('export-map').addEventListener('click', () => {
         map.once('render', () => {
           setTimeout(() => {
-            const canvas = map.getCanvas();
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = 'mapa-arvores.png';
-            link.click();
-          }, 500);
+            try {
+              const canvas = map.getCanvas();
+              const dataURL = canvas.toDataURL('image/png');
+              console.log('Exportando mapa... Tamanho do dataURL:', dataURL.length);
+              if (dataURL.length < 1000) {
+                throw new Error('Imagem exportada está em branco. Tente novamente.');
+              }
+              const link = document.createElement('a');
+              link.href = dataURL;
+              link.download = 'mapa-arvores.png';
+              link.click();
+            } catch (error) {
+              console.error('Erro ao exportar o mapa:', error);
+              alert('Erro ao exportar o mapa: ' + error.message);
+            }
+          }, 2000);
         });
         map.triggerRepaint();
       });
@@ -408,7 +433,7 @@
 
         controls.classList.toggle('hidden');
         legend.classList.toggle('hidden');
-        button.textContent = controls.classList.contains('hidden') ? 'Mostrar Filtros e Legenda' : 'Minimizar Filtros e Legenda';
+        button.textContent = controls.classList.contains('hidden') ? 'Maximizar Filtros e Legenda' : 'Minimizar Filtros e Legenda';
       });
 
       document.getElementById('toggle-points').addEventListener('change', (e) => {
@@ -443,7 +468,7 @@
             <p><strong>Latitude:</strong> ${latitude}</p>
             <p><strong>Longitude:</strong> ${longitude}</p>
             <p><strong>Espécie/Estado:</strong> ${especie_estado}</p>
-            <p><strong>CAP:</strong> ${cap} cm</p>
+            <p><strong>CAP:</strong> ${cap} m</p>
             <p><strong>Altura:</strong> ${altura} m</p>
             <p><strong>Risco:</strong> ${risco}</p>
           `)
