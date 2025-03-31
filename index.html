@@ -63,7 +63,7 @@
     }
     #controls {
       position: absolute;
-      top: 50px; /* Ajustado para não sobrepor o botão toggle-controls */
+      top: 50px;
       left: 10px;
       background-color: rgba(255, 255, 255, 0.9);
       padding: 10px;
@@ -137,7 +137,7 @@
 </head>
 <body>
   <div id="header">
-    <h1>Mapa Interativo Aguativa: Árvores para Supressão Mapeadas - Cornélio Procópio, PR</h1>
+    <h1>Mapa Interativo: Árvores Mapeadas - Cornélio Procópio, PR</h1>
     <p>Visualize as árvores mapeadas e o limite da propriedade. Clique nos pontos para mais detalhes.</p>
   </div>
   <div id="map-container">
@@ -180,7 +180,6 @@
     </div>
     <div id="controls">
       <button id="center-map">Centralizar Mapa</button>
-      <button id="export-map">Exportar Mapa como Imagem</button>
       <label>
         Estilo do Mapa:
         <select id="map-style">
@@ -312,29 +311,6 @@
           center: [-50.7315, -23.2635],
           zoom: 13
         });
-      });
-
-      document.getElementById('export-map').addEventListener('click', () => {
-        map.once('render', () => {
-          setTimeout(() => {
-            try {
-              const canvas = map.getCanvas();
-              const dataURL = canvas.toDataURL('image/png');
-              console.log('Exportando mapa... Tamanho do dataURL:', dataURL.length);
-              if (dataURL.length < 1000) {
-                throw new Error('Imagem exportada está em branco. Tente novamente.');
-              }
-              const link = document.createElement('a');
-              link.href = dataURL;
-              link.download = 'mapa-arvores.png';
-              link.click();
-            } catch (error) {
-              console.error('Erro ao exportar o mapa:', error);
-              alert('Erro ao exportar o mapa: ' + error.message);
-            }
-          }, 2000);
-        });
-        map.triggerRepaint();
       });
 
       document.getElementById('map-style').addEventListener('change', (e) => {
