@@ -115,6 +115,9 @@
     .mapboxgl-popup-content p strong {
       color: #2c3e50;
     }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -162,6 +165,7 @@
     <div id="controls">
       <button id="center-map">Centralizar Mapa</button>
       <button id="export-map">Exportar Mapa como Imagem</button>
+      <button id="toggle-controls">Minimizar Filtros e Legenda</button>
       <label>
         Estilo do Mapa:
         <select id="map-style">
@@ -185,12 +189,16 @@
         </select>
       </label>
       <label>
+        Filtrar por ID:
+        <input type="number" id="id-filter" placeholder="Digite o ID" min="1">
+      </label>
+      <label>
         Altura Mínima (m):
         <input type="number" id="height-min" value="0" min="0" step="0.1">
       </label>
       <label>
         Altura Máxima (m):
-        <input type="number" id="height-max" value="10" min="0" step="0.1">
+        <input type="number" id="height-max" value="20" min="0" step="0.1">
       </label>
       <label>
         <input type="checkbox" id="toggle-points" checked> Mostrar Pontos
@@ -225,7 +233,6 @@
         'data': 'limite_propriedade.geojson'
       });
 
-      // Log para depuração: exibir os valores de category
       fetch('trechos.json')
         .then(response => response.json())
         .then(data => {
@@ -285,7 +292,6 @@
         .addTo(map)
         .togglePopup();
 
-      // Centralizar o mapa
       document.getElementById('center-map').addEventListener('click', () => {
         map.flyTo({
           center: [-50.7315, -23.2635],
@@ -293,16 +299,19 @@
         });
       });
 
-      // Exportar o mapa como imagem
       document.getElementById('export-map').addEventListener('click', () => {
-        const canvas = map.getCanvas();
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = 'mapa-arvores.png';
-        link.click();
+        map.once('render', () => {
+          setTimeout(() => {
+            const canvas = map.getCanvas();
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'mapa-arvores.png';
+            link.click();
+          }, 500);
+        });
+        map.triggerRepaint();
       });
 
-      // Alternar estilo do mapa
       document.getElementById('map-style').addEventListener('change', (e) => {
         map.setStyle(e.target.value);
         map.on('styledata', () => {
@@ -367,34 +376,46 @@
         });
       });
 
-      // Filtro por categoria
       const updateFilters = () => {
         const minHeight = parseFloat(document.getElementById('height-min').value);
         const maxHeight = parseFloat(document.getElementById('height-max').value);
         const category = document.getElementById('category-filter').value;
+        const idFilter = document.getElementById('id-filter').value;
 
         let filter = ['all'];
         if (!isNaN(minHeight) && !isNaN(maxHeight)) {
-            filter.push(['>=', ['to-number', ['get', 'ALTURA']], minHeight]);
-            filter.push(['<=', ['to-number', ['get', 'ALTURA']], maxHeight]);
+          filter.push(['>=', ['to-number', ['get', 'ALTURA']], minHeight]);
+          filter.push(['<=', ['to-number', ['get', 'ALTURA']], maxHeight]);
         }
         if (category !== 'all') {
-            filter.push(['==', ['get', 'category'], category]);
+          filter.push(['==', ['get', 'category'], category]);
+        }
+        if (idFilter !== '') {
+          filter.push(['==', ['to-number', ['get', 'id']], parseInt(idFilter)]);
         }
         map.setFilter('trechos-pontos', filter.length > 1 ? filter : null);
-        };
+      };
 
       document.getElementById('category-filter').addEventListener('change', updateFilters);
       document.getElementById('height-min').addEventListener('input', updateFilters);
       document.getElementById('height-max').addEventListener('input', updateFilters);
+      document.getElementById('id-filter').addEventListener('input', updateFilters);
 
-      // Alternar visibilidade dos pontos
+      document.getElementById('toggle-controls').addEventListener('click', () => {
+        const controls = document.getElementById('controls');
+        const legend = document.getElementById('legend');
+        const button = document.getElementById('toggle-controls');
+
+        controls.classList.toggle('hidden');
+        legend.classList.toggle('hidden');
+        button.textContent = controls.classList.contains('hidden') ? 'Mostrar Filtros e Legenda' : 'Minimizar Filtros e Legenda';
+      });
+
       document.getElementById('toggle-points').addEventListener('change', (e) => {
         const visibility = e.target.checked ? 'visible' : 'none';
         map.setLayoutProperty('trechos-pontos', 'visibility', visibility);
       });
 
-      // Alternar visibilidade do limite da propriedade
       document.getElementById('toggle-boundary').addEventListener('change', (e) => {
         const visibility = e.target.checked ? 'visible' : 'none';
         map.setLayoutProperty('limite-propriedade', 'visibility', visibility);
@@ -409,13 +430,13 @@
         const latitude = e.features[0].properties.LATITUDE || 'Não informado';
         const longitude = e.features[0].properties.LONGITUDE || 'Não informado';
         const especie_estado = e.features[0].properties['ESPÉCIE/ESTADO'] || 'Não informado';
-        const cap = e.features[0].properties.CAP || 'Não informado';
+        const cap = e.features[0].properties['CIRCUNFERÊNCIA ALTURA DO PEITO'] || 'Não informado';
         const altura = e.features[0].properties.ALTURA || 'Não informado';
         const risco = e.features[0].properties.RISCO || 'Não informado';
 
         new mapboxgl.Popup()
-            .setLngLat(coordinates)
-            .setHTML(`
+          .setLngLat(coordinates)
+          .setHTML(`
             <h3>Árvore ID: ${id}</h3>
             <p><strong>Categoria:</strong> ${category}</p>
             <p><strong>Descrição:</strong> ${description}</p>
@@ -425,10 +446,9 @@
             <p><strong>CAP:</strong> ${cap} cm</p>
             <p><strong>Altura:</strong> ${altura} m</p>
             <p><strong>Risco:</strong> ${risco}</p>
-            `)
-            .addTo(map);
-        });
-      
+          `)
+          .addTo(map);
+      });
 
       map.on('click', 'limite-propriedade', (e) => {
         const coordinates = e.features[0].geometry.coordinates[0][0];
